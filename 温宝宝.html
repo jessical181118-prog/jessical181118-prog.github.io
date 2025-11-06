@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表白网页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 圆润可爱字体样式：优先使用圆润字体，适配不同系统 */
+        .calligraphy-text {
+            font-family: 'Comic Sans MS', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            font-size: 52px;
+            color: #ff6b9d;
+            text-shadow: 2px 2px 5px rgba(255, 107, 157, 0.4);
+            margin-bottom: 65px;
+            line-height: 1.6;
+            font-weight: 500; /* 稍显圆润，不生硬 */
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 30px;
+        }
+
+        .choice-btn {
+            padding: 18px 45px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #ff6b6b, #ff4d94);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 77, 148, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(255, 77, 148, 0.6);
+            background: linear-gradient(135deg, #ff5252, #ff3385);
+        }
+
+        @media (max-width: 768px) {
+            .calligraphy-text {
+                font-size: 40px;
+                margin-bottom: 45px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .choice-btn {
+                padding: 15px 35px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="fireworks-container"></div>
+
+    <div class="content">
+        <div class="calligraphy-text">
+            温葆桢大美女<br>你愿意做我的女朋友吗
+        </div>
+        <div class="btn-group">
+            <button class="choice-btn" onclick="alert('太开心啦！往后余生都是你～')">愿意</button>
+            <button class="choice-btn" onclick="alert('我将带上梁小葵作为彩礼❤❤❤❤❤❤')">非常愿意</button>
+        </div>
+    </div>
+
+    <script>
+        class Firework {
+            constructor() {
+                this.x = Math.random() * window.innerWidth;
+                this.y = window.innerHeight;
+                this.colors = [
+                    `hsl(${Math.random() * 360}, 100%, 60%)`,
+                    `hsl(${Math.random() * 360}, 100%, 60%)`,
+                    `hsl(${Math.random() * 360}, 100%, 60%)`
+                ];
+                this.velocityY = -6 - Math.random() * 4;
+                this.velocityX = (Math.random() - 0.5) * 4;
+                this.size = 4;
+                this.exploded = false;
+                this.particles = [];
+            }
+
+            update() {
+                if (!this.exploded) {
+                    this.y += this.velocityY;
+                    this.x += this.velocityX;
+                    this.velocityY += 0.12;
+
+                    if (this.velocityY >= -1.5) {
+                        this.explode();
+                    }
+                } else {
+                    this.particles.forEach(particle => particle.update());
+                    this.particles = this.particles.filter(particle => particle.alpha > 0);
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                const particleCount = 50 + Math.floor(Math.random() * 30);
+                for (let i = 0; i < particleCount; i++) {
+                    const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                    this.particles.push(new Particle(this.x, this.y, color));
+                }
+            }
+
+            draw(ctx) {
+                if (!this.exploded) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.colors[0];
+                    ctx.fill();
+                } else {
+                    this.particles.forEach(particle => particle.draw(ctx));
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocityX = (Math.random() - 0.5) * 8;
+                this.velocityY = (Math.random() - 0.5) * 8;
+                this.size = Math.random() * 3 + 1;
+                this.alpha = 1;
+                this.decay = 0.015 + Math.random() * 0.01;
+            }
+
+            update() {
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.velocityY += 0.1;
+                this.alpha -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.getElementById('fireworks-container').appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        const fireworks = [];
+
+        setInterval(() => {
+            fireworks.push(new Firework());
+        }, 250 + Math.random() * 400);
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            fireworks.forEach((firework, index) => {
+                firework.update();
+                firework.draw(ctx);
+
+                if (firework.exploded && firework.particles.length === 0) {
+                    fireworks.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
